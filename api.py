@@ -10,7 +10,7 @@ Install dependencies:
     pip install fastapi uvicorn python-multipart speechbrain librosa torch torchaudio numpy
 
 Run:
-    uvicorn api:app --host 0.0.0.0 --port 8000
+    uvicorn api:fast_api_app --host 0.0.0.0 --port 8000
 
 Endpoints:
   POST /enroll                 - Register a user's voiceprint
@@ -36,15 +36,18 @@ from speechbrain.inference.speaker import SpeakerRecognition
 from inference import Predictor
 
 # ── Config ────────────────────────────────────────────────────────────────────
+# Get the directory where this script is located (for absolute paths)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Speaker Verification Config
 SIMILARITY_THRESHOLD = 0.75
 SAMPLE_RATE = 16000
 MIN_AUDIO_DURATION = 3.0
-VOICEPRINT_STORE = "voiceprints.json"
+VOICEPRINT_STORE = os.path.join(SCRIPT_DIR, "voiceprints.json")
 
 # AI Detection Config
-DEEPFAKE_MODEL_PATH = "models/DeepFakeAudioDetector.pt"
-NORM_STATS_PATH = "data/norm_stats.pt"
+DEEPFAKE_MODEL_PATH = os.path.join(SCRIPT_DIR, "models", "DeepFakeAudioDetector.pt")
+NORM_STATS_PATH = os.path.join(SCRIPT_DIR, "data", "norm_stats.pt")
 DEEPFAKE_THRESHOLD = 0.5  # Probability threshold for AI/deepfake detection
 
 # API Config
@@ -66,9 +69,10 @@ async def lifespan(app: FastAPI):
     global VERIFICATION_MODEL, DEEPFAKE_DETECTOR, voiceprint_store
 
     print("Loading ECAPA-TDNN model... (downloads ~100MB on first run)")
+    pretrained_models_dir = os.path.join(SCRIPT_DIR, "pretrained_models")
     VERIFICATION_MODEL = SpeakerRecognition.from_hparams(
         source="speechbrain/spkrec-ecapa-voxceleb",
-        savedir="pretrained_models/spkrec-ecapa-voxceleb",
+        savedir=pretrained_models_dir + "/spkrec-ecapa-voxceleb",
     )
     print("Speaker verification model loaded.")
 
@@ -200,6 +204,24 @@ class HealthResponse(BaseModel):
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
+
+@fast_api_app.get("/", response_model=dict)
+async def root() -> dict:
+    """Root endpoint — API overview."""
+    return {
+        "name": "Audio Verification API",
+        "version": "2.0.0",
+        "description": "Speaker verification + DeepFake detection",
+        "endpoints": {
+            "POST /enroll": "Register a user's voiceprint",
+            "POST /verify": "Verify speaker identity and detect DeepFake",
+            "DELETE /unenroll/{user_id}": "Remove a user's voiceprint",
+            "GET /health": "Health check",
+            "GET /docs": "Swagger UI documentation",
+            "GET /redoc": "ReDoc documentation",
+        },
+    }
 
 
 @fast_api_app.get("/health", response_model=HealthResponse)

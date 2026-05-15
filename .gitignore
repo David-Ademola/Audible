@@ -6,6 +6,7 @@
 __pycache__/
 data/fake/
 data/real/
+pretrained_models/
 .bash_history
 .cursor_server
 .viminfo

@@ -108,7 +108,7 @@ print(f"Probability (authentic): {probability:.4f}")
 Start the API server (serves enrollment, verification, and health endpoints):
 
 ```bash
-uvicorn api:app --host 0.0.0.0 --port 8000
+uvicorn api:fast_api_app --host 0.0.0.0 --port 8000
 ```
 
 **Endpoints (summary):**
