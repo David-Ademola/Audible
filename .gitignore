@@ -1,0 +1,14 @@
+.copilot/
+.lightning_studio/
+.vscode/
+.idea/
+.venv/
+__pycache__/
+data/fake/
+data/real/
+.bash_history
+.cursor_server
+.viminfo
+.vscode-server
+.windsurf-server
+.wget-hsts
